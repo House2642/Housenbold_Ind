@@ -59,5 +59,5 @@ def test2(num1, num2, num3):
     print(layered.eval())
     layered2 = Add(Sub(num1, Div(num1, num2)), layered)
     print(layered2.eval())
-test(Number(10), Number(2))
-test2(Number(10), Number(2), Number(3))
+#test(Number(10), Number(2))
+#test2(Number(10), Number(2), Number(3))

@@ -1,6 +1,7 @@
 from openai import OpenAI
 client = OpenAI()
 
+#using open ai's basic api to answer questions
 completion = client.chat.completions.create(
     model="gpt-4o-mini",
     messages=[
