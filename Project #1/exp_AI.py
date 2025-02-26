@@ -1,7 +1,17 @@
 from openai import OpenAI
 from expressions import Number, Add, Sub, Mul, Div, Expr
 
-client = OpenAI()
+def read_api_key(filename="../api/openaikey.txt"):
+    try:
+        with open(filename, 'r') as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Please create a {filename} file with your OpenAI API key")
+    except Exception as e:
+        raise Exception(f"Error reading API key: {e}")
+
+api_key = read_api_key()
+client = OpenAI(api_key=api_key)
 
 system_message = """
 You are a mathematical expression builder. Given a mathematical question, generate Python code using these classes:
