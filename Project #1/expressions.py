@@ -154,5 +154,5 @@ def test3(num1: Expr, num2: Expr, num3: Expr):
 
     
 #test(Number(10), Number(2))
-test2(Number(15), Number(25), Number(3))
-test3(Number(10), Number(2), Number(3))
+#test2(Number(15), Number(25), Number(3))
+#test3(Number(10), Number(2), Number(3))
