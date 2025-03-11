@@ -1,5 +1,6 @@
 from openai import OpenAI
 from expressions import Number, Add, Sub, Mul, Div, Expr
+import matplotlib.pyplot as plt
 
 def read_api_key(filename="../api/openaikey.txt"):
     try:
@@ -136,23 +137,41 @@ def generate_random_ast(max_depth=4) -> Expr:
             
     return op(left, right)
 
-# Test with 25 random ASTs
-def run_tests(num_tests=25, test_words=False):
-    successes = 0
-    failures = 0
+# Test with 25 random ASTs for each depth K from 1 to 7
+def run_tests(num_tests=25, test_words=True):  
+    depths = range(1, 8)  # K values from 1 to 7
+    success_rates = []
     
-    for i in range(num_tests):
-        print(f"\nTest {i + 1}/{num_tests}")
-        ast = generate_random_ast()
-        if test_expression_reconstruction(ast):
-            successes += 1
-        else:
-            failures += 1
+    for k in depths:
+        print(f"\nTesting depth K={k}")
+        successes = 0
+        failures = 0
+        
+        for i in range(num_tests):
+            print(f"\nTest {i + 1}/{num_tests} for K={k}")
+            ast = generate_random_ast(max_depth=k)
+            if test_expression_reconstruction(ast):
+                successes += 1
+            else:
+                failures += 1
+                
+        success_rate = (successes/num_tests)*100
+        success_rates.append(success_rate)
+        print(f"\nResults for K={k}:")
+        print(f"Successes: {successes}")
+        print(f"Failures: {failures}")
+        print(f"Success rate: {success_rate:.2f}%")
     
-    print(f"\nFinal Results:")
-    print(f"Successes: {successes}")
-    print(f"Failures: {failures}")
-    print(f"Success rate: {(successes/num_tests)*100:.2f}%")
+    # Create and save the graph
+    plt.figure(figsize=(10, 6))
+    plt.plot(depths, success_rates, marker='o')
+    plt.xlabel('AST Depth (K)')
+    plt.ylabel('Success Rate (%)')
+    plt.title('AST Reconstruction Success Rate vs Tree Depth')
+    plt.grid(True)
+    plt.savefig('ast_success_rates.png')
+    plt.close()
+    
+    print("\nGraph has been saved as 'ast_success_rates.png'")
 
 if __name__ == "__main__":
-    run_tests()
