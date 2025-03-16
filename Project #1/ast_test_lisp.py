@@ -17,36 +17,7 @@ api_key = read_api_key()
 client = OpenAI(api_key=api_key)
 
 def test_expression_reconstruction(lisp_expr: str) -> bool:
-    system_message = """
-    You are a mathematical expression builder. Given a mathematical expression in standard notation (e.g., "(5 + 3) * 2"),
-    generate Lisp code using these functions:
-    - (number value): Creates a number node
-    - (add left right): Adds two expressions
-    - (sub left right): Subtracts two expressions
-    - (mul left right): Multiplies two expressions
-    - (div left right): Divides two expressions
-
-    CRITICAL RULES:
-    1. Each operation MUST have EXACTLY two arguments
-    2. For expressions with multiple operations, nest them properly
-    3. Never use more than 2 arguments per operation
-    4. ALWAYS wrap number literals with number
-    5. For complex expressions, build them from inside out
-
-    Examples:
-    "5 - 1" → (sub (number 5) (number 1))
-    "5 + 1" → (add (number 5) (number 1))
-    "2 + 3 + 4" → (add (add (number 2) (number 3)) (number 4))
-    "2 * 3 * 4" → (mul (mul (number 2) (number 3)) (number 4))
-    "(2 + 3) / 4" → (div (add (number 2) (number 3)) (number 4))
-
-    IMPORTANT: 
-    - All operations must be binary (exactly two arguments)
-    - Chain operations from left to right using proper nesting
-    - Always write out the complete expression
-    - Never use ... or ellipsis
-    - Only respond with valid Lisp code using these functions, nothing else
-    """
+    system_message = open("prompts/exp_prompts/gpt_prompt.txt").read()
 
     try:
         # Convert Lisp expression to infix notation for GPT
@@ -55,7 +26,7 @@ def test_expression_reconstruction(lisp_expr: str) -> bool:
         print(f"Infix expression: {infix_expr}")
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini-2024-07-18",
             messages=[
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": infix_expr}
