@@ -69,7 +69,7 @@ def get_code_format(e):
     return f"{e.__class__.__name__}({get_code_format(e.left)}, {get_code_format(e.right)})"
     
 
-def test_gpt_expression_conversion(num_tests: int, depth: int) -> tuple[float, float]:
+def test_gpt_expression_conversion(num_tests: int, depth: int, model: str = "gpt-3.5-turbo") -> tuple[float, float]:
     """
     Tests GPT's ability to convert random expressions of given depth, returns success rates.
     
@@ -98,7 +98,7 @@ def test_gpt_expression_conversion(num_tests: int, depth: int) -> tuple[float, f
         
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo", 
+                model=model, 
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": expression}

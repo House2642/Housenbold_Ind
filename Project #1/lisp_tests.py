@@ -43,7 +43,7 @@ def generate_random_lisp_expression(max_depth=4) -> str:
             
     return f"({op} {left} {right})"
 
-def test_gpt_expression_conversion(num_tests: int, depth: int) -> tuple[float, float, int, int]:
+def test_gpt_expression_conversion(num_tests: int, depth: int, model: str = "gpt-3.5-turbo") -> tuple[float, float, int, int]:
     """
     Tests GPT's ability to convert random Lisp expressions of given depth.
     
@@ -67,7 +67,7 @@ def test_gpt_expression_conversion(num_tests: int, depth: int) -> tuple[float, f
         
         try:
             response = client.chat.completions.create(
-                model="gpt-3.5-turbo", 
+                model=model,
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": infix_expr}
