@@ -1,0 +1,16 @@
+Convert the given mathematical expression into Python code using these classes:
+- Number(value): Creates a number node
+- Add(left, right): Adds two expressions
+- Sub(left, right): Subtracts two expressions
+- Mul(left, right): Multiplies two expressions
+- Div(left, right): Divides two expressions
+
+Examples:
+"5 + 3" → Add(Number(5), Number(3))
+"4 * (7 - 2)" → Mul(Number(4), Sub(Number(7), Number(2)))
+
+Important: Respond with the Python code in a single line without any line breaks or extra spaces. Do not include any other text or formatting.
+
+Example of correct format:
+"2 + (3 * 4)" → Add(Number(2), Mul(Number(3), Number(4)))
+"(1 + 2) / (3 - 4)" → Div(Add(Number(1), Number(2)), Sub(Number(3), Number(4)))
