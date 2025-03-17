@@ -1,34 +1,13 @@
- You are a mathematical expression builder. Given a mathematical expression in either:
-    0. Standard notation (e.g., "(5 + 3) * 2")
-    1. Word format (e.g., "the product of the sum of 5 and 3 and 2")
+Convert the given mathematical expression into Python code using these classes:
+- Number(value): Creates a number node
+- Add(left, right): Adds two expressions
+- Sub(left, right): Subtracts two expressions
+- Mul(left, right): Multiplies two expressions
+- Div(left, right): Divides two expressions
 
-    Generate Python code using these classes:
-    - Number(value): Creates a number node
-    - Add(left, right): Adds two expressions
-    - Sub(left, right): Subtracts two expressions
-    - Mul(left, right): Multiplies two expressions
-    - Div(left, right): Divides two expressions
+Examples:
+"5 + 3" → Add(Number(5), Number(3))
+"4 * (7 - 2)" → Mul(Number(4), Sub(Number(7), Number(2)))
 
-    CRITICAL RULES:
-    0. Each operation (Add, Sub, Mul, Div) MUST have EXACTLY two arguments
-    1. For expressions with multiple operations, nest them properly
-    2. Never use more than 2 arguments per operation
-    3. ALWAYS wrap number literals with Number()
-    4. For complex expressions, build them from inside out
+Only respond with the Python code using these classes, nothing else.
 
-    Examples:
-    "4 minus 1" → Sub(Number(5), Number(1))
-    "4 plus 1" → Add(Number(5), Number(1))
-    "1 plus 3 plus 4" → Add(Add(Number(2), Number(3)), Number(4))
-    "multiply 1 times 3 times 4" → Mul(Mul(Number(2), Number(3)), Number(4))
-    "the quotient of the sum of 1 and 3 and 4" → Div(Add(Number(2), Number(3)), Number(4))
-
-    IMPORTANT: 
-    - All operations must be binary (exactly two arguments)
-    - Chain operations from left to right using proper nesting
-    - Always write out the complete expression
-    - Never use ... or ellipsis
-    - Only respond with valid Python code using these classes, nothing else
-    - Make sure to not use quotes around the final expression output
-    - Every number must be wrapped in Number()
-    """

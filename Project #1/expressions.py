@@ -9,10 +9,6 @@ class Expr(ABC):
     def __str__(self)->str:
         pass
 
-    @abstractmethod
-    def to_words(self) -> str:
-        pass
-
 class Number(Expr):
     def __init__(self, value):
         if not isinstance(value, int):
@@ -23,9 +19,6 @@ class Number(Expr):
         return self.value
         
     def __str__(self)->str:
-        return str(self.value)
-    
-    def to_words(self) -> str:
         return str(self.value)
 
 class Add(Expr):
@@ -43,9 +36,6 @@ class Add(Expr):
         left_str = f"({str(self.left)})" if isinstance(self.left, (Add, Sub)) else str(self.left)
         right_str = f"({str(self.right)})" if isinstance(self.right, (Add, Sub)) else str(self.right)
         return f"{left_str} + {right_str}"
-    
-    def to_words(self) -> str:
-        return f"the sum of {self.left.to_words()} and {self.right.to_words()}"
 
 class Sub(Expr):
     def __init__(self, left: Expr, right: Expr):
@@ -62,9 +52,6 @@ class Sub(Expr):
         left_str = f"({str(self.left)})" if isinstance(self.left, (Add, Sub)) else str(self.left)
         right_str = f"({str(self.right)})" if isinstance(self.right, (Add, Sub)) else str(self.right)
         return f"{left_str} - {right_str}"
-    
-    def to_words(self) -> str:
-        return f"the difference of {self.left.to_words()} and {self.right.to_words()}"
 
 class Mul(Expr):
     def __init__(self, left: Expr, right: Expr):
@@ -81,9 +68,6 @@ class Mul(Expr):
         left_str = str(self.left) if isinstance(self.left, Number) else f"({str(self.left)})"
         right_str = str(self.right) if isinstance(self.right, Number) else f"({str(self.right)})"
         return f"{left_str} * {right_str}"
-    
-    def to_words(self) -> str:
-        return f"the product of {self.left.to_words()} and {self.right.to_words()}"
 
 class Div(Expr):
     def __init__(self, left: Expr, right: Expr):
@@ -102,9 +86,6 @@ class Div(Expr):
         left_str = str(self.left) if isinstance(self.left, Number) else f"({str(self.left)})"
         right_str = str(self.right) if isinstance(self.right, Number) else f"({str(self.right)})"
         return f"{left_str} / {right_str}"
-    
-    def to_words(self) -> str:
-        return f"the quotient of {self.left.to_words()} and {self.right.to_words()}"
 
 def test(num1: Expr, num2: Expr):
     add = Add(num1, num2)
@@ -132,25 +113,19 @@ def test3(num1: Expr, num2: Expr, num3: Expr):
     # Test string representations of expressions
     simple_add = Add(num1, num2)
     print(f"Simple addition: {simple_add}")
-    print(f"Simple addition: {simple_add.to_words()}")
     nested_mul = Mul(num1, Add(num2, num3))
     print(f"Nested multiplication: {nested_mul}")
-    print(f"Nested multiplication: {nested_mul.to_words()}")    
     complex_expr = Div(Sub(Mul(num1, num2), num3), Number(2))
     print(f"Complex expression: {complex_expr}")
-    print(f"Complex expression: {complex_expr.to_words()}")
     # Test that parentheses are added correctly for compound expressions
     compound = Add(Mul(num1, num2), Div(num2, num3))
     print(f"Compound expression: {compound}")
-    print(f"Compound expression: {compound.to_words()}")
     
     compound2 = Add(Sub(Mul(num1, Add(num2,num2)), num3), Number(5))
     print(f"Compound expression: {compound2}")
-    print(f"Compound expression: {compound2.to_words()}")
 
     compound3 = Add(Sub(Mul(num1, num2), num3), Number(5))
     print(f"Compound expression: {compound3}")
-    print(f"Compound expression: {compound3.to_words()}")
 
     
 #test(Number(10), Number(2))

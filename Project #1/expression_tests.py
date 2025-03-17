@@ -1,6 +1,7 @@
 from openai import OpenAI
 import random
 from expressions import Number, Add, Sub, Mul, Div, Expr
+from datetime import datetime, timedelta
 
 def read_api_key(filename="../api/openaikey.txt"):
     try:
@@ -58,33 +59,170 @@ def generate_random_expression(max_depth=4) -> Expr:
             
     return op(left, right)
 
-def test_expression(expr: Expr):
+    # Recursively build the code format string
+def get_code_format(e):
+    if isinstance(e, Number):
+        return f"Number({e.value})"
+    return f"{e.__class__.__name__}({get_code_format(e.left)}, {get_code_format(e.right)})"
+    
+
+def get_usage_cost():
     """
-    Test a single expression by printing its string representation and evaluated result
+    Gets the actual usage cost from OpenAI API for the current day
     """
-    print(f"Expression: {str(expr)}")
+    end_date = datetime.now()
+    start_date = end_date - timedelta(days=1)
+    
     try:
-        result = expr.eval()
-        print(f"Evaluation: {result}")
-    except ZeroDivisionError:
-        print("Evaluation failed: Division by zero")
+        response = client.billing.usage.retrieve(
+            start_date=start_date.strftime("%Y-%m-%d"),
+            end_date=end_date.strftime("%Y-%m-%d")
+        )
+        return response.total_usage / 100  # Convert from cents to dollars
     except Exception as e:
-        print(f"Evaluation failed: {str(e)}")
-    print()
+        print(f"Failed to retrieve usage data: {e}")
+        return None
+
+def test_gpt_expression_conversion(
+    num_tests: int, 
+    depth: int,
+    input_token_cost_per_million: float = 1.50,
+    output_token_cost_per_million: float = 2.00,
+) -> tuple[float, float]:
+    """
+    Tests GPT's ability to convert random expressions of given depth, returns success rates.
+    
+    Args:
+        num_tests (int): Number of random expressions to test
+        depth (int): Maximum depth of generated expressions
+        input_token_cost_per_million (float): Cost per 1M input tokens (default: $1.50 for GPT-3.5-turbo)
+        output_token_cost_per_million (float): Cost per 1M output tokens (default: $2.00 for GPT-3.5-turbo)
+        
+    Returns:
+        tuple[float, float]: (value_match_rate, code_match_rate)
+    """
+    system_message = open("prompts/exp_gpt_prompt.txt", "r").read()
+
+    value_matches = 0
+    code_matches = 0
+    total_evaluable = 0
+    total_parseable = 0  # New counter for expressions that can be parsed
+    total_tokens = 0
+    total_cost = 0
+
+    for i in range(num_tests):
+        expr = generate_random_expression(depth)
+        expression = str(expr)
+        print(f"\nTest {i+1}/{num_tests}")
+        print(f"Testing expression: {expression}")
+        
+        try:
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo", 
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": expression}
+                ],
+                temperature=0.0
+            )
+            
+            # Track token usage and cost
+            input_tokens = response.usage.prompt_tokens
+            output_tokens = response.usage.completion_tokens
+            total_tokens += input_tokens + output_tokens
+            cost = (input_tokens * input_token_cost_per_million / 1_000_000) + (output_tokens * output_token_cost_per_million / 1_000_000)
+            total_cost += cost
+            print(f"API call cost: ${cost:.6f}")
+            
+            expression_code = response.choices[0].message.content.strip()
+            print(f"Generated code: {expression_code}")
+            
+            # Always attempt string matching
+            original_code = get_code_format(expr)
+            total_parseable += 1  # Count this as a parseable attempt
+            if original_code == expression_code:
+                code_matches += 1
+                print("String representation match!")
+            else:
+                print("String representation mismatch!")
+                print(f"Original code format: {original_code}")
+                print(f"Generated code format: {expression_code}")
+            
+            try:
+                # Try to parse and evaluate
+                generated_expr = eval(expression_code, {"Number": Number, "Add": Add, "Sub": Sub, "Mul": Mul, "Div": Div})
+                original_result = expr.eval()
+                generated_result = generated_expr.eval()
+                
+                # If we get here, both expressions were successfully evaluated
+                total_evaluable += 1
+                
+                if original_result == generated_result:
+                    value_matches += 1
+                    print(f"Evaluation match: both = {original_result}")
+                else:
+                    print(f"Evaluation mismatch!")
+                    print(f"Original expression evaluates to: {original_result}")
+                    print(f"Generated expression evaluates to: {generated_result}")
+                    
+            except ZeroDivisionError:
+                print("Evaluation skipped: Division by zero")
+            except Exception as e:
+                print(f"Error in parsing or evaluation: {str(e)}")
+                
+        except Exception as e:
+            print(f"API or other error: {str(e)}")
+    
+    # Calculate success rates
+    value_success_rate = value_matches / total_evaluable if total_evaluable > 0 else 0.0
+    code_success_rate = code_matches / total_parseable if total_parseable > 0 else 0.0
+    
+    print(f"\nOverall Results:")
+    print(f"Total tests: {num_tests}")
+    print(f"Successfully parsed: {total_parseable}")
+    print(f"Successfully evaluated: {total_evaluable}")
+    print(f"Value match success rate: {value_success_rate:.2%}")
+    print(f"Code match success rate: {code_success_rate:.2%}")
+    print(f"Total tokens used: {total_tokens}")
+    print(f"Total cost: ${total_cost:.6f}")
+    
+    return value_success_rate, code_success_rate
 
 # Example usage:
 if __name__ == "__main__":
-    print("Testing simple expressions:")
-    test_expression(Add(Number(5), Number(3)))  # 5 + 3
-    test_expression(Mul(Number(4), Sub(Number(7), Number(2))))  # 4 * (7 - 2)
+    import matplotlib.pyplot as plt
     
-    print("\nTesting random expressions of increasing depth:")
-    for depth in range(1, 5):
-        print(f"\nDepth {depth}:")
-        for _ in range(3):
-            expr = generate_random_expression(max_depth=depth)
-            test_expression(expr)
-
-
-
-
+    print("\nTesting GPT expression conversion across depths 1-6:")
+    
+    depths = range(1, 7)
+    value_rates = []
+    code_rates = []
+    
+    for depth in depths:
+        print(f"\nTesting depth {depth}:")
+        value_rate, code_rate = test_gpt_expression_conversion(
+            25, depth,
+            input_token_cost_per_million=0.50,
+            output_token_cost_per_million=1.50
+        )
+        value_rates.append(value_rate)
+        code_rates.append(code_rate)
+    
+    plt.figure(figsize=(10, 5))
+    
+    plt.subplot(1, 2, 1)
+    plt.plot(depths, value_rates, marker='o')
+    plt.title('Evaluation Accuracy vs Expression Depth')
+    plt.xlabel('Expression Depth')
+    plt.ylabel('Accuracy')
+    plt.grid(True)
+    
+    plt.subplot(1, 2, 2)
+    plt.plot(depths, code_rates, marker='o')
+    plt.title('String Matching Accuracy vs Expression Depth')
+    plt.xlabel('Expression Depth')
+    plt.ylabel('Accuracy')
+    plt.grid(True)
+    
+    plt.tight_layout()
+    plt.show()
